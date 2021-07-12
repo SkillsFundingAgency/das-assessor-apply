@@ -19,7 +19,7 @@
         <Version>2.1.1</Version>
       </PackageReference>
       <PackageReference Include="System.Text.Encodings.Web">
-        <Version>4.5.0</Version>
+        <Version>4.5.1</Version>
       </PackageReference>
     </ItemGroup>
 </Project>
