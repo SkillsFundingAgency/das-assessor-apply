@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.ApplyService.Application.Apply;
 using SFA.DAS.ApplyService.Application.Apply.Financial.Applications;
 using SFA.DAS.ApplyService.Domain.Apply;
 using SFA.DAS.ApplyService.Domain.Entities;
@@ -29,7 +28,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.Financial.Clarific
             _clarificationApplications = new List<RoatpFinancialSummaryItem> { clarificationFinancialApplication };
 
             _applyRepository = new Mock<IApplyRepository>();
-            _applyRepository.Setup(r => r.GetClarificationFinancialApplications(null,null)).ReturnsAsync(_clarificationApplications);
+            _applyRepository.Setup(r => r.GetClarificationFinancialApplications(null, null, null)).ReturnsAsync(_clarificationApplications);
 
             _handler = new ClarificationFinancialApplicationsHandler(_applyRepository.Object);
         }
@@ -37,7 +36,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.Financial.Clarific
         [Test]
         public async Task ClarificationFinancialApplicationsHandler_returns_expected_applications()
         {
-            var request = new ClarificationFinancialApplicationsRequest(null,null);
+            var request = new ClarificationFinancialApplicationsRequest(null, null, null);
             var result = await _handler.Handle(request, new CancellationToken());
 
             result.Should().NotBeNull();

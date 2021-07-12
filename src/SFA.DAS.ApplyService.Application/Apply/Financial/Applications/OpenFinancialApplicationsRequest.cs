@@ -6,13 +6,15 @@ namespace SFA.DAS.ApplyService.Application.Apply.Financial.Applications
 {
     public class OpenFinancialApplicationsRequest : IRequest<List<RoatpFinancialSummaryItem>>
     {
-        public OpenFinancialApplicationsRequest(string sortOrder, string sortColumn)
+        public OpenFinancialApplicationsRequest(string searchTerm, string sortColumn, string sortOrder)
         {
+            SearchTerm = searchTerm;
             SortOrder = sortOrder;
             SortColumn = sortColumn;
         }
 
-        public string SortColumn { get; set; }
+        public string SearchTerm { get; }
+        public string SortColumn { get; }
         public string SortOrder { get; }
     }
 }

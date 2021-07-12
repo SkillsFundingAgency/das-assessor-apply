@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.ApplyService.Application.Apply;
 using SFA.DAS.ApplyService.Application.Apply.Financial.Applications;
 using SFA.DAS.ApplyService.Domain.Apply;
 using SFA.DAS.ApplyService.Domain.Entities;
@@ -38,7 +36,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.Financial.Financia
 
             _applyRepository = new Mock<IApplyRepository>();
 
-            _applyRepository.Setup(r => r.GetFinancialApplicationsStatusCounts()).ReturnsAsync(new RoatpFinancialApplicationsStatusCounts
+            _applyRepository.Setup(r => r.GetFinancialApplicationsStatusCounts(null)).ReturnsAsync(new RoatpFinancialApplicationsStatusCounts
             {
                 ApplicationsOpen = _openApplications.Count,
                 ApplicationsWithClarification = _clarificationApplications.Count,
@@ -55,7 +53,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.Financial.Financia
             int expectedClarificationCount = _clarificationApplications.Count;
             int expectedClosedCount = _closedApplications.Count;
 
-            var request = new FinancialApplicationsStatusCountsRequest();
+            var request = new FinancialApplicationsStatusCountsRequest(null);
             var result = await _handler.Handle(request, new CancellationToken());
 
             result.Should().NotBeNull();

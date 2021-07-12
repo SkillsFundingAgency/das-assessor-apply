@@ -243,7 +243,7 @@ namespace SFA.DAS.ApplyService.Data
         
 
 
-        public async Task<List<RoatpFinancialSummaryItem>> GetOpenFinancialApplications(string sortOrder, string sortColumn)
+        public async Task<List<RoatpFinancialSummaryItem>> GetOpenFinancialApplications(string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -283,6 +283,7 @@ namespace SFA.DAS.ApplyService.Data
                           AND apply.GatewayReviewStatus IN (@gatewayStatusPass) -- NOTE: If Gateway did not pass then it goes straight to Oversight
                           AND apply.ApplicationStatus = @applicationStatusGatewayAssessed AND apply.DeletedAt IS NULL
                           AND apply.FinancialReviewStatus IN (@financialStatusDraft, @financialStatusNew, @financialStatusInProgress)
+                          AND ( @searchString = '%%' OR apply.UKPRN LIKE @searchString OR org.Name LIKE @searchString )
                         ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
@@ -291,7 +292,8 @@ namespace SFA.DAS.ApplyService.Data
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
                             financialStatusDraft = FinancialReviewStatus.Draft,
                             financialStatusNew = FinancialReviewStatus.New,
-                            financialStatusInProgress = FinancialReviewStatus.InProgress
+                            financialStatusInProgress = FinancialReviewStatus.InProgress,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
@@ -373,11 +375,12 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<RoatpFinancialSummaryItem>> GetClarificationFinancialApplications(string sortOrder, string sortColumn)
+        public async Task<List<RoatpFinancialSummaryItem>> GetClarificationFinancialApplications(string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
                 var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirectionFinancial(sortOrder)}";
+
                 return (await connection
                     .QueryAsync<RoatpFinancialSummaryItem>(
                         $@"SELECT 
@@ -414,25 +417,25 @@ namespace SFA.DAS.ApplyService.Data
                           AND apply.GatewayReviewStatus IN (@gatewayStatusPass) -- NOTE: If Gateway did not pass then it goes straight to Oversight
                           AND apply.ApplicationStatus = @applicationStatusGatewayAssessed AND apply.DeletedAt IS NULL
                           AND apply.FinancialReviewStatus IN (@financialStatusClarificationSent)
+                          AND ( @searchString = '%%' OR apply.UKPRN LIKE @searchString OR org.Name LIKE @searchString )
                        ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             financialHealthSequence = 2,
                             gatewayStatusPass = GatewayReviewStatus.Pass,
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
-                            financialStatusClarificationSent = FinancialReviewStatus.ClarificationSent
+                            financialStatusClarificationSent = FinancialReviewStatus.ClarificationSent,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<List<RoatpFinancialSummaryItem>> GetClosedFinancialApplications(string sortOrder, string sortColumn)
+        public async Task<List<RoatpFinancialSummaryItem>> GetClosedFinancialApplications(string searchTerm, string sortColumn, string sortOrder)
         {
-            if (sortColumn == null)
-                sortColumn = "OutcomeMadeDate";
-
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
-                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirectionFinancial(sortOrder)}";
+                var orderByClause = $"{GetSortColumnForNew(sortColumn ?? "OutcomeMadeDate")} { GetOrderByDirectionFinancial(sortOrder)}";
+
                 return (await connection
                    .QueryAsync<RoatpFinancialSummaryItem>(
                        $@"SELECT 
@@ -481,6 +484,7 @@ namespace SFA.DAS.ApplyService.Data
                                apply.ApplicationStatus IN (@applicationStatusWithdrawn, @applicationStatusRemoved)
                                OR apply.FinancialReviewStatus IN (@financialStatusApproved, @financialStatusDeclined, @financialStatusExempt)
                               )
+                          AND ( @searchString = '%%' OR apply.UKPRN LIKE @searchString OR org.Name LIKE @searchString )
                         ORDER BY {orderByClause}, org.Name ASC",
                        new
                        {
@@ -490,17 +494,18 @@ namespace SFA.DAS.ApplyService.Data
                            applicationStatusRemoved = ApplicationStatus.Removed,
                            financialStatusApproved = FinancialReviewStatus.Pass,
                            financialStatusDeclined = FinancialReviewStatus.Fail,
-                           financialStatusExempt = FinancialReviewStatus.Exempt
+                           financialStatusExempt = FinancialReviewStatus.Exempt,
+                           searchString = $"%{searchTerm}%"
                        })).ToList();
             }
         }
 
-        public async Task<RoatpFinancialApplicationsStatusCounts> GetFinancialApplicationsStatusCounts()
+        public async Task<RoatpFinancialApplicationsStatusCounts> GetFinancialApplicationsStatusCounts(string searchTerm)
         {
             // Note: For now it is easier to run all three queries. It may make sense to do something similar to that done with EPAO
-            var openApplications = await GetOpenFinancialApplications(null,null);
-            var clarificationApplications = await GetClarificationFinancialApplications(null,null);
-            var closedApplications = await GetClosedFinancialApplications(null,null);
+            var openApplications = await GetOpenFinancialApplications(searchTerm, null, null);
+            var clarificationApplications = await GetClarificationFinancialApplications(searchTerm, null, null);
+            var closedApplications = await GetClosedFinancialApplications(searchTerm, null, null);
 
             return new RoatpFinancialApplicationsStatusCounts
             {

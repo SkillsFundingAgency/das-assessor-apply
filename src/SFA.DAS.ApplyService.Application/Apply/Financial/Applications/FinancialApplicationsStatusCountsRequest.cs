@@ -5,5 +5,11 @@ namespace SFA.DAS.ApplyService.Application.Apply.Financial.Applications
 {
     public class FinancialApplicationsStatusCountsRequest : IRequest<RoatpFinancialApplicationsStatusCounts>
     {
+        public FinancialApplicationsStatusCountsRequest(string searchTerm)
+        {
+            SearchTerm = searchTerm;
+        }
+
+        public string SearchTerm { get; }
     }
 }

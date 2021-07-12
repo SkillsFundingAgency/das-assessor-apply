@@ -17,7 +17,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Financial.Applications
 
         public async Task<RoatpFinancialApplicationsStatusCounts> Handle(FinancialApplicationsStatusCountsRequest request, CancellationToken cancellationToken)
         {
-            return await _repository.GetFinancialApplicationsStatusCounts();
+            return await _repository.GetFinancialApplicationsStatusCounts(request.SearchTerm);
         }
     }
 }

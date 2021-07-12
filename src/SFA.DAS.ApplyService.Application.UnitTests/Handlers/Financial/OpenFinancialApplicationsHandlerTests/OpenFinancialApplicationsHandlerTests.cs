@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.ApplyService.Application.Apply;
 using SFA.DAS.ApplyService.Application.Apply.Financial.Applications;
 using SFA.DAS.ApplyService.Domain.Apply;
 using SFA.DAS.ApplyService.Domain.Entities;
@@ -30,7 +29,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.Financial.OpenFina
             _openApplications = new List<RoatpFinancialSummaryItem> { openFinancialApplication, openExemptFinancialApplication };
 
             _applyRepository = new Mock<IApplyRepository>();
-            _applyRepository.Setup(r => r.GetOpenFinancialApplications(null,null)).ReturnsAsync(_openApplications);
+            _applyRepository.Setup(r => r.GetOpenFinancialApplications(null, null, null)).ReturnsAsync(_openApplications);
 
             _handler = new OpenFinancialApplicationsHandler(_applyRepository.Object);
         }
@@ -38,7 +37,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.Financial.OpenFina
         [Test]
         public async Task OpenFinancialApplicationsHandler_returns_expected_applications()
         {
-            var request = new OpenFinancialApplicationsRequest(null,null);
+            var request = new OpenFinancialApplicationsRequest(null, null, null);
             var result = await _handler.Handle(request, new CancellationToken());
 
             result.Should().NotBeNull();

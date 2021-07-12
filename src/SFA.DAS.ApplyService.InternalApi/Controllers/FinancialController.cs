@@ -34,9 +34,9 @@ namespace SFA.DAS.ApplyService.InternalApi.Controllers
         }
 
         [HttpGet("/Financial/OpenApplications")]
-        public async Task<ActionResult> OpenApplications(string sortOrder, string sortColumn)
+        public async Task<ActionResult> OpenApplications(string searchTerm, string sortColumn, string sortOrder)
         {
-            var applications = await _mediator.Send(new OpenFinancialApplicationsRequest(sortOrder,sortColumn));
+            var applications = await _mediator.Send(new OpenFinancialApplicationsRequest(searchTerm, sortColumn, sortOrder));
             return Ok(applications);
         }
 
@@ -48,23 +48,23 @@ namespace SFA.DAS.ApplyService.InternalApi.Controllers
         }
 
         [HttpGet("/Financial/ClarificationApplications")]
-        public async Task<ActionResult> ClarificationApplications(string sortOrder, string sortColumn)
+        public async Task<ActionResult> ClarificationApplications(string searchTerm, string sortColumn, string sortOrder)
         {
-            var applications = await _mediator.Send(new ClarificationFinancialApplicationsRequest(sortOrder,sortColumn));
+            var applications = await _mediator.Send(new ClarificationFinancialApplicationsRequest(searchTerm, sortColumn, sortOrder));
             return Ok(applications);
         }
 
         [HttpGet("/Financial/ClosedApplications")]
-        public async Task<ActionResult> ClosedApplications(string sortOrder, string sortColumn)
+        public async Task<ActionResult> ClosedApplications(string searchTerm, string sortColumn, string sortOrder)
         {
-            var applications = await _mediator.Send(new ClosedFinancialApplicationsRequest(sortOrder, sortColumn));
+            var applications = await _mediator.Send(new ClosedFinancialApplicationsRequest(searchTerm, sortColumn, sortOrder));
             return Ok(applications);
         }
 
         [HttpGet("/Financial/StatusCounts")]
-        public async Task<ActionResult> StatusCounts()
+        public async Task<ActionResult> StatusCounts(string searchTerm)
         {
-            var statusCounts = await _mediator.Send(new FinancialApplicationsStatusCountsRequest());
+            var statusCounts = await _mediator.Send(new FinancialApplicationsStatusCountsRequest(searchTerm));
             return Ok(statusCounts);
         }
 
