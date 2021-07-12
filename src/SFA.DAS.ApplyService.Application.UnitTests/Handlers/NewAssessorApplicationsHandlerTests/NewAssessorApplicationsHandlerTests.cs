@@ -27,9 +27,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.NewAssessorApplica
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = new List<AssessorApplicationSummary>();
-            _repository.Setup(x => x.GetNewAssessorApplications(expectedUser,null,null)).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetNewAssessorApplications(expectedUser, null, null, null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new NewAssessorApplicationsRequest(expectedUser,null,null), new CancellationToken());
+            var actualResult = await _handler.Handle(new NewAssessorApplicationsRequest(expectedUser, null, null, null), new CancellationToken());
 
             Assert.AreSame(expectedResult, actualResult);
         }

@@ -23,7 +23,7 @@ namespace SFA.DAS.ApplyService.Data
         private const string ApplicationSummaryFields = @"ApplicationId,
                             org.Name AS OrganisationName,
                             ApplicationStatus,
-                            JSON_VALUE(apply.ApplyData, '$.ApplyDetails.UKPRN') AS Ukprn,
+                            apply.UKPRN AS Ukprn,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ReferenceNumber') AS ApplicationReferenceNumber,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ProviderRouteName') AS ProviderRoute,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS SubmittedDate,
@@ -78,13 +78,20 @@ namespace SFA.DAS.ApplyService.Data
                                      )
                                 )";
 
+        private const string SearchStringWhereClause = @"
+                                ( 
+                                    @searchString = '%%'
+                                    OR apply.UKPRN LIKE @searchString
+                                    OR org.Name LIKE @searchString
+                                )";
+
         public AssessorRepository(IConfigurationService configurationService, ILogger<AssessorRepository> logger)
         {
             _logger = logger;
             _config = configurationService.GetConfig().GetAwaiter().GetResult();
         }
 
-        public async Task<List<AssessorApplicationSummary>> GetNewAssessorApplications(string userId, string sortOrder, string sortColumn)
+        public async Task<List<AssessorApplicationSummary>> GetNewAssessorApplications(string userId, string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -96,18 +103,19 @@ namespace SFA.DAS.ApplyService.Data
                             {ApplicationSummaryFields}
 	                       FROM Apply apply
 	                       INNER JOIN Organisations org ON org.Id = apply.OrganisationId
-	                       WHERE {NewApplicationsWhereClause}
+	                       WHERE {NewApplicationsWhereClause} AND {SearchStringWhereClause}
                            ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
-                            userId = userId
+                            userId = userId,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<int> GetNewAssessorApplicationsCount(string userId)
+        public async Task<int> GetNewAssessorApplicationsCount(string userId, string searchTerm)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -115,12 +123,14 @@ namespace SFA.DAS.ApplyService.Data
                     .ExecuteScalarAsync<int>(
                         $@"SELECT COUNT(1)
 	                      FROM Apply apply
-	                      WHERE {NewApplicationsWhereClause}",
+	                      INNER JOIN Organisations org ON org.Id = apply.OrganisationId
+	                      WHERE {NewApplicationsWhereClause} AND {SearchStringWhereClause}",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
-                            userId = userId
+                            userId = userId,
+                            searchString = $"%{searchTerm}%"
                         }));
             }
         }
@@ -193,7 +203,7 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<AssessorApplicationSummary>> GetInProgressAssessorApplications(string userId, string sortOrder, string sortColumn)
+        public async Task<List<AssessorApplicationSummary>> GetInProgressAssessorApplications(string userId, string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -205,19 +215,20 @@ namespace SFA.DAS.ApplyService.Data
                             {ApplicationSummaryFields}
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
-	                        WHERE {InProgressApplicationsWhereClause}
+	                        WHERE {InProgressApplicationsWhereClause} AND {SearchStringWhereClause}
                             ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
                             inProgressReviewStatus = AssessorReviewStatus.InProgress,
-                            userId = userId
+                            userId = userId,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<int> GetInProgressAssessorApplicationsCount(string userId)
+        public async Task<int> GetInProgressAssessorApplicationsCount(string userId, string searchTerm)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -225,18 +236,20 @@ namespace SFA.DAS.ApplyService.Data
                     .ExecuteScalarAsync<int>(
                         $@"SELECT COUNT(1)
 	                      FROM Apply apply
-	                      WHERE {InProgressApplicationsWhereClause}",
+	                      INNER JOIN Organisations org ON org.Id = apply.OrganisationId
+	                      WHERE {InProgressApplicationsWhereClause} AND {SearchStringWhereClause}",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
                             inProgressReviewStatus = AssessorReviewStatus.InProgress,
-                            userId = userId
+                            userId = userId,
+                            searchString = $"%{searchTerm}%"
                         }));
             }
         }
 
-        public async Task<List<ModerationApplicationSummary>> GetApplicationsInModeration(string sortOrder, string sortColumn)
+        public async Task<List<ModerationApplicationSummary>> GetApplicationsInModeration(string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -250,7 +263,7 @@ namespace SFA.DAS.ApplyService.Data
                             , JSON_VALUE(apply.ApplyData, '$.ModeratorReviewDetails.ModeratorName') AS ModeratorName
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
-                            WHERE {InModerationApplicationsWhereClause}
+                            WHERE {InModerationApplicationsWhereClause} AND {SearchStringWhereClause}
 	                       ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
@@ -258,12 +271,13 @@ namespace SFA.DAS.ApplyService.Data
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
                             approvedReviewStatus = AssessorReviewStatus.Approved,
                             newModerationStatus = ModerationStatus.New,
-                            inProgressModerationStatus = ModerationStatus.InProgress
+                            inProgressModerationStatus = ModerationStatus.InProgress,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<int> GetApplicationsInModerationCount()
+        public async Task<int> GetApplicationsInModerationCount(string searchTerm)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -271,19 +285,21 @@ namespace SFA.DAS.ApplyService.Data
                     .ExecuteScalarAsync<int>(
                         $@"SELECT COUNT(1)
 	                      FROM Apply apply
-	                      WHERE {InModerationApplicationsWhereClause}",
+	                      INNER JOIN Organisations org ON org.Id = apply.OrganisationId
+	                      WHERE {InModerationApplicationsWhereClause} AND {SearchStringWhereClause}",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
                             approvedReviewStatus = AssessorReviewStatus.Approved,
                             newModerationStatus = ModerationStatus.New,
-                            inProgressModerationStatus = ModerationStatus.InProgress
+                            inProgressModerationStatus = ModerationStatus.InProgress,
+                            searchString = $"%{searchTerm}%"
                         }));
             }
         }
 
-        public async Task<List<ClarificationApplicationSummary>> GetApplicationsInClarification(string sortOrder, string sortColumn)
+        public async Task<List<ClarificationApplicationSummary>> GetApplicationsInClarification(string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -297,7 +313,7 @@ namespace SFA.DAS.ApplyService.Data
                             , JSON_VALUE(apply.ApplyData, '$.ModeratorReviewDetails.ClarificationRequestedOn') AS ClarificationRequestedOn
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
-	                        WHERE {InClarificationApplicationsWhereClause}
+	                        WHERE {InClarificationApplicationsWhereClause} AND {SearchStringWhereClause}
                             ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
@@ -305,12 +321,13 @@ namespace SFA.DAS.ApplyService.Data
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
                             approvedReviewStatus = AssessorReviewStatus.Approved,
                             newModerationStatus = ModerationStatus.New,
-                            clarificationSentModerationStatus = ModerationStatus.ClarificationSent
+                            clarificationSentModerationStatus = ModerationStatus.ClarificationSent,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<int> GetApplicationsInClarificationCount()
+        public async Task<int> GetApplicationsInClarificationCount(string searchTerm)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -318,19 +335,21 @@ namespace SFA.DAS.ApplyService.Data
                     .ExecuteScalarAsync<int>(
                         $@"SELECT COUNT(1)
 	                      FROM Apply apply
-	                      WHERE {InClarificationApplicationsWhereClause}",
+	                      INNER JOIN Organisations org ON org.Id = apply.OrganisationId
+	                      WHERE {InClarificationApplicationsWhereClause} AND {SearchStringWhereClause}",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
                             applicationStatusGatewayAssessed = ApplicationStatus.GatewayAssessed,
                             approvedReviewStatus = AssessorReviewStatus.Approved,
                             newModerationStatus = ModerationStatus.New,
-                            clarificationSentModerationStatus = ModerationStatus.ClarificationSent
+                            clarificationSentModerationStatus = ModerationStatus.ClarificationSent,
+                            searchString = $"%{searchTerm}%"
                         }));
             }
         }
 
-        public async Task<List<ClosedApplicationSummary>> GetClosedApplications(string sortOrder, string sortColumn)
+        public async Task<List<ClosedApplicationSummary>> GetClosedApplications(string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -353,7 +372,7 @@ namespace SFA.DAS.ApplyService.Data
                               END AS OutcomeMadeBy                            
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
-	                        WHERE {ClosedApplicationsWhereClause}
+	                        WHERE {ClosedApplicationsWhereClause} AND {SearchStringWhereClause}
                              ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
@@ -361,12 +380,13 @@ namespace SFA.DAS.ApplyService.Data
                             applicationStatusRemoved = ApplicationStatus.Removed,
                             approvedReviewStatus = AssessorReviewStatus.Approved,
                             passModerationStatus = ModerationStatus.Pass,
-                            failModerationStatus = ModerationStatus.Fail
+                            failModerationStatus = ModerationStatus.Fail,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<int> GetClosedApplicationsCount()
+        public async Task<int> GetClosedApplicationsCount(string searchTerm)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -374,14 +394,16 @@ namespace SFA.DAS.ApplyService.Data
                     .ExecuteScalarAsync<int>(
                         $@"SELECT COUNT(1)
 	                      FROM Apply apply
-	                      WHERE {ClosedApplicationsWhereClause}",
+	                      INNER JOIN Organisations org ON org.Id = apply.OrganisationId
+	                      WHERE {ClosedApplicationsWhereClause} AND {SearchStringWhereClause}",
                         new
                         {
                             applicationStatusWithdrawn = ApplicationStatus.Withdrawn,
                             applicationStatusRemoved = ApplicationStatus.Removed,
                             approvedReviewStatus = AssessorReviewStatus.Approved,
                             passModerationStatus = ModerationStatus.Pass,
-                            failModerationStatus = ModerationStatus.Fail
+                            failModerationStatus = ModerationStatus.Fail,
+                            searchString = $"%{searchTerm}%"
                         }));
             }
         }

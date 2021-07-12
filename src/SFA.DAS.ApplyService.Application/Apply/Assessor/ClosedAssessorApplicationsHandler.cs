@@ -18,7 +18,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Assessor
 
         public async Task<List<ClosedApplicationSummary>> Handle(ClosedAssessorApplicationsRequest request, CancellationToken cancellationToken)
         {
-            return await _repository.GetClosedApplications(request.SortOrder, request.SortColumn);
+            return await _repository.GetClosedApplications(request.SearchTerm, request.SortColumn, request.SortOrder);
         }
     }
 }

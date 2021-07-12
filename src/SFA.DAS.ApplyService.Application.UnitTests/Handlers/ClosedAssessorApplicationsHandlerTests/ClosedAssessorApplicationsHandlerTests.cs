@@ -28,9 +28,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.ClosedAssessorAppl
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = new List<ClosedApplicationSummary>();
-            _repository.Setup(x => x.GetClosedApplications(null,null)).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetClosedApplications(null, null, null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new ClosedAssessorApplicationsRequest(expectedUser,null,null), new CancellationToken());
+            var actualResult = await _handler.Handle(new ClosedAssessorApplicationsRequest(expectedUser, null, null, null), new CancellationToken());
 
             Assert.AreSame(expectedResult, actualResult);
         }

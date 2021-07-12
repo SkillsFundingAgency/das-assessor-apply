@@ -18,7 +18,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Assessor
 
         public async Task<List<ClarificationApplicationSummary>> Handle(ApplicationsInClarificationRequest request, CancellationToken cancellationToken)
         {
-            return await _repository.GetApplicationsInClarification(request.SortOrder, request.SortColumn);
+            return await _repository.GetApplicationsInClarification(request.SearchTerm, request.SortColumn, request.SortOrder);
         }
     }
 }

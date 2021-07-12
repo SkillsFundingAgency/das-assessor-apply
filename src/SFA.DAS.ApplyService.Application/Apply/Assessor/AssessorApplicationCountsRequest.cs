@@ -5,11 +5,13 @@ namespace SFA.DAS.ApplyService.Application.Apply.Assessor
 {
     public class AssessorApplicationCountsRequest : IRequest<AssessorApplicationCounts>
     {
-        public AssessorApplicationCountsRequest(string userId)
+        public AssessorApplicationCountsRequest(string userId, string searchTerm)
         {
             UserId = userId;
+            SearchTerm = searchTerm;
         }
 
         public string UserId { get; }
+        public string SearchTerm { get; }
     }
 }

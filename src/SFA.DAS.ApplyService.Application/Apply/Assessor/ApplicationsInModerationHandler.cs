@@ -18,7 +18,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Assessor
 
         public async Task<List<ModerationApplicationSummary>> Handle(ApplicationsInModerationRequest request, CancellationToken cancellationToken)
         {
-            return await _repository.GetApplicationsInModeration(request.SortOrder, request.SortColumn);
+            return await _repository.GetApplicationsInModeration(request.SearchTerm, request.SortColumn, request.SortOrder);
         }
     }
 }

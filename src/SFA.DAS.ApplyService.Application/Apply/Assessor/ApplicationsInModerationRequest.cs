@@ -6,15 +6,18 @@ namespace SFA.DAS.ApplyService.Application.Apply.Assessor
 {
     public class ApplicationsInModerationRequest : IRequest<List<ModerationApplicationSummary>>
     {
-        public ApplicationsInModerationRequest(string userId, string sortOrder, string sortColumn)
+        public ApplicationsInModerationRequest(string userId, string searchTerm, string sortColumn, string sortOrder)
         {
             UserId = userId;
-            SortOrder = sortOrder;
+            SearchTerm = searchTerm;
             SortColumn = sortColumn;
+            SortOrder = sortOrder;
+            
         }
-
-        public string SortColumn { get; set; }
+        
         public string UserId { get; }
+        public string SearchTerm { get; }
+        public string SortColumn { get; }
         public string SortOrder { get; }
     }
 }

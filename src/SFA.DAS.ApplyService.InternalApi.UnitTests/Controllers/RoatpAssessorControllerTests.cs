@@ -69,7 +69,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests.Controllers
             var expectedResult = new AssessorApplicationCounts(newApplications, inprogressApplications, moderationApplications, clarificationApplications, closedApplications);
             _mediator.Setup(x => x.Send(It.Is<AssessorApplicationCountsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
 
-            var actualResult = await _controller.GetApplicationCounts(_userId);
+            var actualResult = await _controller.GetApplicationCounts(_userId, null);
 
             _mediator.Verify(x => x.Send(It.Is<AssessorApplicationCountsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>()), Times.Once);
             Assert.AreSame(expectedResult, actualResult);
@@ -81,7 +81,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests.Controllers
             var expectedResult = new List<AssessorApplicationSummary>();
             _mediator.Setup(x => x.Send(It.Is<NewAssessorApplicationsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
 
-            var actualResult = await _controller.NewApplications(_userId,null,null);
+            var actualResult = await _controller.NewApplications(_userId, null, null, null);
             
             _mediator.Verify(x => x.Send(It.Is<NewAssessorApplicationsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>()), Times.Once);
             Assert.AreSame(expectedResult, actualResult);
@@ -93,7 +93,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests.Controllers
             var expectedResult = new List<AssessorApplicationSummary>();
             _mediator.Setup(x => x.Send(It.Is<InProgressAssessorApplicationsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
 
-            var actualResult = await _controller.InProgressApplications(_userId,null,null);
+            var actualResult = await _controller.InProgressApplications(_userId, null, null, null);
 
             _mediator.Verify(x => x.Send(It.Is<InProgressAssessorApplicationsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>()), Times.Once);
             Assert.AreSame(expectedResult, actualResult);
@@ -105,7 +105,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests.Controllers
             var expectedResult = new List<ModerationApplicationSummary>();
             _mediator.Setup(x => x.Send(It.Is<ApplicationsInModerationRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
 
-            var actualResult = await _controller.InModerationApplications(_userId,null,null);
+            var actualResult = await _controller.InModerationApplications(_userId, null, null, null);
 
             _mediator.Verify(x => x.Send(It.Is<ApplicationsInModerationRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>()), Times.Once);
             Assert.AreSame(expectedResult, actualResult);
@@ -117,7 +117,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests.Controllers
             var expectedResult = new List<ClarificationApplicationSummary>();
             _mediator.Setup(x => x.Send(It.Is<ApplicationsInClarificationRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
 
-            var actualResult = await _controller.InClarificationApplications(_userId,null,null);
+            var actualResult = await _controller.InClarificationApplications(_userId, null, null, null);
 
             _mediator.Verify(x => x.Send(It.Is<ApplicationsInClarificationRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>()), Times.Once);
             Assert.AreSame(expectedResult, actualResult);
@@ -129,7 +129,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests.Controllers
             var expectedResult = new List<ClosedApplicationSummary>();
             _mediator.Setup(x => x.Send(It.Is<ClosedAssessorApplicationsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
 
-            var actualResult = await _controller.ClosedApplications(_userId,null,null);
+            var actualResult = await _controller.ClosedApplications(_userId, null, null, null);
 
             _mediator.Verify(x => x.Send(It.Is<ClosedAssessorApplicationsRequest>(y => y.UserId == _userId), It.IsAny<CancellationToken>()), Times.Once);
             Assert.AreSame(expectedResult, actualResult);

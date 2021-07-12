@@ -26,9 +26,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.AssessorApplicatio
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = 7;
-            _repository.Setup(x => x.GetNewAssessorApplicationsCount(expectedUser)).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetNewAssessorApplicationsCount(expectedUser, null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser, null), new CancellationToken());
 
             Assert.AreEqual(expectedResult, actualResult.NewApplications);
         }
@@ -38,9 +38,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.AssessorApplicatio
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = 5;
-            _repository.Setup(x => x.GetInProgressAssessorApplicationsCount(expectedUser)).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetInProgressAssessorApplicationsCount(expectedUser, null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser, null), new CancellationToken());
 
             Assert.AreEqual(expectedResult, actualResult.InProgressApplications);
         }
@@ -50,9 +50,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.AssessorApplicatio
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = 4;
-            _repository.Setup(x => x.GetApplicationsInModerationCount()).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetApplicationsInModerationCount(null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser, null), new CancellationToken());
 
             Assert.AreEqual(expectedResult, actualResult.ModerationApplications);
         }
@@ -62,9 +62,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.AssessorApplicatio
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = 4;
-            _repository.Setup(x => x.GetApplicationsInClarificationCount()).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetApplicationsInClarificationCount(null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser, null), new CancellationToken());
 
             Assert.AreEqual(expectedResult, actualResult.ClarificationApplications);
         }
@@ -74,9 +74,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.AssessorApplicatio
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = 4;
-            _repository.Setup(x => x.GetClosedApplicationsCount()).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetClosedApplicationsCount(null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new AssessorApplicationCountsRequest(expectedUser, null), new CancellationToken());
 
             Assert.AreEqual(expectedResult, actualResult.ClosedApplications);
         }

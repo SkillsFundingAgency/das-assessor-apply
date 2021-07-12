@@ -17,11 +17,11 @@ namespace SFA.DAS.ApplyService.Application.Apply.Assessor
 
         public async Task<AssessorApplicationCounts> Handle(AssessorApplicationCountsRequest request, CancellationToken cancellationToken)
         {
-            var newApplicationCount = _repository.GetNewAssessorApplicationsCount(request.UserId);
-            var inProgressApplicationCount = _repository.GetInProgressAssessorApplicationsCount(request.UserId);
-            var inModerationApplicationCount = _repository.GetApplicationsInModerationCount();
-            var inClarificationApplicationCount = _repository.GetApplicationsInClarificationCount();
-            var closedApplicationCount = _repository.GetClosedApplicationsCount();
+            var newApplicationCount = _repository.GetNewAssessorApplicationsCount(request.UserId, request.SearchTerm);
+            var inProgressApplicationCount = _repository.GetInProgressAssessorApplicationsCount(request.UserId, request.SearchTerm);
+            var inModerationApplicationCount = _repository.GetApplicationsInModerationCount(request.SearchTerm);
+            var inClarificationApplicationCount = _repository.GetApplicationsInClarificationCount(request.SearchTerm);
+            var closedApplicationCount = _repository.GetClosedApplicationsCount(request.SearchTerm);
 
             await Task.WhenAll(newApplicationCount, inProgressApplicationCount, inModerationApplicationCount, inClarificationApplicationCount, closedApplicationCount);
 
