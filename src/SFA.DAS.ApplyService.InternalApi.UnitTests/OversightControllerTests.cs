@@ -75,7 +75,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests
                 .Setup(x => x.Send(It.IsAny<GetOversightsPendingRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(pendingOversights);
 
-            var actualResult = await _controller.OversightsPending(null,null);
+            var actualResult = await _controller.OversightsPending(null,null,null);
             Assert.AreEqual(pendingOversights.Reviews.Count, actualResult.Value.Reviews.Count);
         }
 
@@ -100,12 +100,71 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests
                 .Setup(x => x.Send(It.IsAny<GetOversightsPendingRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(pendingOversights);
 
-            var actualResult = await _controller.OversightsPending(null,null);
+            var actualResult = await _controller.OversightsPending(null,null,null);
             var returnedOversight = actualResult.Value.Reviews.First();
 
             Assert.That(returnedOversight,Is.SameAs(pendingOversights.Reviews.First()));
         }
 
+        [Test]
+        public async Task Check_count_of_completed_results_are_correct()
+        {
+            var completedOversights = new CompletedOversightReviews
+            {
+                Reviews = new List<CompletedOversightReview> {
+                new CompletedOversightReview
+                {
+                    ApplicationId = Guid.NewGuid(),
+                    OrganisationName = "XXX Limited",
+                    Ukprn = "12344321",
+                    ProviderRoute = "Main",
+                    ApplicationReferenceNumber = "APR000111"
+                },
+                new CompletedOversightReview
+                {
+                    ApplicationId = Guid.NewGuid(),
+                    OrganisationName = "ZZZ Limited",
+                    Ukprn = "43211234",
+                    ProviderRoute = "Employer",
+                    ApplicationReferenceNumber = "APR000112",
+                }
+            }
+            };
+
+            _mediator
+                .Setup(x => x.Send(It.IsAny<GetOversightsCompletedRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(completedOversights);
+
+            var actualResult = await _controller.OversightsCompleted(null, null, null);
+            Assert.AreEqual(completedOversights.Reviews.Count, actualResult.Value.Reviews.Count);
+        }
+
+        [Test]
+        public async Task Check_completed_results_are_as_expected()
+        {
+            var completedOversights = new CompletedOversightReviews
+            {
+                Reviews = new List<CompletedOversightReview>
+                {
+                    new CompletedOversightReview{
+                        ApplicationId = Guid.NewGuid(),
+                        OrganisationName = "XXX Limited",
+                        Ukprn = "12344321",
+                        ProviderRoute = "Main",
+                        ApplicationReferenceNumber = "APR000111"
+                    }
+                }
+            };
+
+            _mediator
+                .Setup(x => x.Send(It.IsAny<GetOversightsCompletedRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(completedOversights);
+
+            var actualResult = await _controller.OversightsCompleted(null, null, null);
+            var returnedOversight = actualResult.Value.Reviews.First();
+
+            Assert.That(returnedOversight, Is.SameAs(completedOversights.Reviews.First()));
+        }
 
         [Test]
         public async Task Check_oversight_details_result_is_as_expected()

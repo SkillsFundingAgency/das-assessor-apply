@@ -36,16 +36,16 @@ namespace SFA.DAS.ApplyService.InternalApi.Controllers
 
         [HttpGet]
         [Route("Oversights/Pending")]
-        public async Task<ActionResult<PendingOversightReviews>> OversightsPending(string sortColumn, string sortOrder)
+        public async Task<ActionResult<PendingOversightReviews>> OversightsPending(string searchTerm, string sortColumn, string sortOrder)
         {
-            return await _mediator.Send(new GetOversightsPendingRequest(sortColumn,sortOrder));
+            return await _mediator.Send(new GetOversightsPendingRequest(searchTerm, sortColumn, sortOrder));
         }
 
         [HttpGet]
         [Route("Oversights/Completed")]
-        public async Task<ActionResult<CompletedOversightReviews>> OversightsCompleted(string sortColumn, string sortOrder)
+        public async Task<ActionResult<CompletedOversightReviews>> OversightsCompleted(string searchTerm, string sortColumn, string sortOrder)
         {
-            return await _mediator.Send(new GetOversightsCompletedRequest(sortColumn, sortOrder));
+            return await _mediator.Send(new GetOversightsCompletedRequest(searchTerm, sortColumn, sortOrder));
         }
 
         [HttpGet]
