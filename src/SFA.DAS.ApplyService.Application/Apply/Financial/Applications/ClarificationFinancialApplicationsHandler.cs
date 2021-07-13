@@ -18,7 +18,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Financial.Applications
 
         public async Task<List<RoatpFinancialSummaryItem>> Handle(ClarificationFinancialApplicationsRequest request, CancellationToken cancellationToken)
         {
-            return await _repository.GetClarificationFinancialApplications();
+            return await _repository.GetClarificationFinancialApplications(request.SortOrder,request.SortColumn);
         }
     }
 }

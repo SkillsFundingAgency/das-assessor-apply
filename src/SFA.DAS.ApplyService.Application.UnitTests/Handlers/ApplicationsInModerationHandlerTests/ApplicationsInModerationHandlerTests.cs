@@ -28,9 +28,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.ApplicationsInMode
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = new List<ModerationApplicationSummary>();
-            _repository.Setup(x => x.GetApplicationsInModeration()).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetApplicationsInModeration(null,null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new ApplicationsInModerationRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new ApplicationsInModerationRequest(expectedUser,null,null), new CancellationToken());
 
             Assert.AreSame(expectedResult, actualResult);
         }

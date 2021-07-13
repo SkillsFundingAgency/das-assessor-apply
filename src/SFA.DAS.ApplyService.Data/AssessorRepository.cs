@@ -18,6 +18,7 @@ namespace SFA.DAS.ApplyService.Data
     {
         private readonly IApplyConfig _config;
         private readonly ILogger<AssessorRepository> _logger;
+        private const string ModeratorNameField = "ModeratorName";
 
         private const string ApplicationSummaryFields = @"ApplicationId,
                             org.Name AS OrganisationName,
@@ -83,10 +84,12 @@ namespace SFA.DAS.ApplyService.Data
             _config = configurationService.GetConfig().GetAwaiter().GetResult();
         }
 
-        public async Task<List<AssessorApplicationSummary>> GetNewAssessorApplications(string userId)
+        public async Task<List<AssessorApplicationSummary>> GetNewAssessorApplications(string userId, string sortOrder, string sortColumn)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirection(sortOrder)}";
+
                 return (await connection
                     .QueryAsync<AssessorApplicationSummary>(
                         $@"SELECT 
@@ -94,7 +97,7 @@ namespace SFA.DAS.ApplyService.Data
 	                       FROM Apply apply
 	                       INNER JOIN Organisations org ON org.Id = apply.OrganisationId
 	                       WHERE {NewApplicationsWhereClause}
-                           ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC, org.Name ASC",
+                           ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
@@ -190,10 +193,12 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<AssessorApplicationSummary>> GetInProgressAssessorApplications(string userId)
+        public async Task<List<AssessorApplicationSummary>> GetInProgressAssessorApplications(string userId, string sortOrder, string sortColumn)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} {GetOrderByDirection(sortOrder)}";
+
                 return (await connection
                     .QueryAsync<AssessorApplicationSummary>(
                         $@"SELECT 
@@ -201,7 +206,7 @@ namespace SFA.DAS.ApplyService.Data
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
 	                        WHERE {InProgressApplicationsWhereClause}
-                            ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC, org.Name ASC",
+                            ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
@@ -231,10 +236,12 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<ModerationApplicationSummary>> GetApplicationsInModeration()
+        public async Task<List<ModerationApplicationSummary>> GetApplicationsInModeration(string sortOrder, string sortColumn)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirection(sortOrder)}";
+
                 return (await connection
                     .QueryAsync<ModerationApplicationSummary>(
                         $@"SELECT 
@@ -244,7 +251,7 @@ namespace SFA.DAS.ApplyService.Data
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
                             WHERE {InModerationApplicationsWhereClause}
-	                        ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC, org.Name ASC",
+	                       ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
@@ -276,10 +283,12 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<ClarificationApplicationSummary>> GetApplicationsInClarification()
+        public async Task<List<ClarificationApplicationSummary>> GetApplicationsInClarification(string sortOrder, string sortColumn)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirection(sortOrder)}";
+
                 return (await connection
                     .QueryAsync<ClarificationApplicationSummary>(
                         $@"SELECT 
@@ -289,7 +298,7 @@ namespace SFA.DAS.ApplyService.Data
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
 	                        WHERE {InClarificationApplicationsWhereClause}
-                            ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC, org.Name ASC",
+                            ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
@@ -321,10 +330,12 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<ClosedApplicationSummary>> GetClosedApplications()
+        public async Task<List<ClosedApplicationSummary>> GetClosedApplications(string sortOrder, string sortColumn)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirection(sortOrder)}";
+
                 return (await connection
                     .QueryAsync<ClosedApplicationSummary>(
                         $@"SELECT 
@@ -343,7 +354,7 @@ namespace SFA.DAS.ApplyService.Data
 	                        FROM Apply apply
 	                        INNER JOIN Organisations org ON org.Id = apply.OrganisationId
 	                        WHERE {ClosedApplicationsWhereClause}
-                            ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC, org.Name ASC",
+                             ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             applicationStatusWithdrawn = ApplicationStatus.Withdrawn,
@@ -646,6 +657,34 @@ namespace SFA.DAS.ApplyService.Data
                 }
                 connection.Close();
             }
+        }
+
+        private static string GetSortColumnForNew(string requestedColumn)
+        {
+            switch (requestedColumn)
+            {
+                case "SubmittedDate":
+                    return " CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ";
+                case ModeratorNameField:
+                   return $@" CASE WHEN NULLIF(JSON_VALUE(apply.ApplyData, '$.ModeratorReviewDetails.ModeratorName'),'') IS NULL THEN 1 ELSE 0 END,
+                            JSON_VALUE(apply.ApplyData, '$.ModeratorReviewDetails.ModeratorName') ";
+
+                case "OutcomeMadeBy":
+                    var orderDetails = $@" CASE
+                        WHEN apply.ApplicationStatus = '{ApplicationStatus.Withdrawn}' THEN JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationWithdrawnBy')
+                        WHEN apply.ApplicationStatus = '{ApplicationStatus.Removed}' THEN JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationRemovedBy')
+                        ELSE JSON_VALUE(apply.ApplyData, '$.ModeratorReviewDetails.ModeratorName')
+                    END ";
+
+                    return orderDetails;
+                default:
+                    return " CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ";
+            }
+        }
+
+        private static string GetOrderByDirection(string sortOrder)
+        {
+            return "ascending".Equals(sortOrder, StringComparison.InvariantCultureIgnoreCase) ? " ASC " : " DESC ";
         }
     }
 }

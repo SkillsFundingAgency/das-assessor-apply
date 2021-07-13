@@ -34,9 +34,9 @@ namespace SFA.DAS.ApplyService.InternalApi.Controllers
         }
 
         [HttpGet("/Financial/OpenApplications")]
-        public async Task<ActionResult> OpenApplications()
+        public async Task<ActionResult> OpenApplications(string sortOrder, string sortColumn)
         {
-            var applications = await _mediator.Send(new OpenFinancialApplicationsRequest());
+            var applications = await _mediator.Send(new OpenFinancialApplicationsRequest(sortOrder,sortColumn));
             return Ok(applications);
         }
 
@@ -48,16 +48,16 @@ namespace SFA.DAS.ApplyService.InternalApi.Controllers
         }
 
         [HttpGet("/Financial/ClarificationApplications")]
-        public async Task<ActionResult> ClarificationApplications()
+        public async Task<ActionResult> ClarificationApplications(string sortOrder, string sortColumn)
         {
-            var applications = await _mediator.Send(new ClarificationFinancialApplicationsRequest());
+            var applications = await _mediator.Send(new ClarificationFinancialApplicationsRequest(sortOrder,sortColumn));
             return Ok(applications);
         }
 
         [HttpGet("/Financial/ClosedApplications")]
-        public async Task<ActionResult> ClosedApplications()
+        public async Task<ActionResult> ClosedApplications(string sortOrder, string sortColumn)
         {
-            var applications = await _mediator.Send(new ClosedFinancialApplicationsRequest());
+            var applications = await _mediator.Send(new ClosedFinancialApplicationsRequest(sortOrder, sortColumn));
             return Ok(applications);
         }
 

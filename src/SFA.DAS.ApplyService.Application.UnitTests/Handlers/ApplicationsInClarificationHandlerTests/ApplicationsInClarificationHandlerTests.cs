@@ -28,9 +28,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.ApplicationsInClar
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = new List<ClarificationApplicationSummary>();
-            _repository.Setup(x => x.GetApplicationsInClarification()).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetApplicationsInClarification(null,null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new ApplicationsInClarificationRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new ApplicationsInClarificationRequest(expectedUser,null,null), new CancellationToken());
 
             Assert.AreSame(expectedResult, actualResult);
         }

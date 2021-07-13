@@ -22,30 +22,30 @@ namespace SFA.DAS.ApplyService.InternalApi.Controllers
         }
 
         [HttpGet("GatewayReview/Counts")]
-        public async Task<GetGatewayApplicationCountsResponse> GetApplicationCounts()
+        public async Task<GetGatewayApplicationCountsResponse> GetApplicationCounts(string searchTerm)
         {
-            var applicationCounts = await _mediator.Send(new GetGatewayApplicationCountsRequest());
+            var applicationCounts = await _mediator.Send(new GetGatewayApplicationCountsRequest { SearchTerm = searchTerm });
             return applicationCounts;
         }
 
         [HttpGet("GatewayReview/NewApplications")]
-        public async Task<ActionResult> NewApplications(string sortOrder)
+        public async Task<ActionResult> NewApplications(string searchTerm, string sortOrder)
         {
-            var applications = await _mediator.Send(new NewGatewayApplicationsRequest {SortOrder = sortOrder});
+            var applications = await _mediator.Send(new NewGatewayApplicationsRequest { SearchTerm = searchTerm, SortOrder = sortOrder });
             return Ok(applications);
         }
 
         [HttpGet("GatewayReview/InProgressApplications")]
-        public async Task<ActionResult> InProgressApplications(string sortColumn, string sortOrder)
+        public async Task<ActionResult> InProgressApplications(string searchTerm, string sortColumn, string sortOrder)
         {
-            var applications = await _mediator.Send(new InProgressGatewayApplicationsRequest { SortColumn = sortColumn, SortOrder = sortOrder });
+            var applications = await _mediator.Send(new InProgressGatewayApplicationsRequest { SearchTerm = searchTerm, SortColumn = sortColumn, SortOrder = sortOrder });
             return Ok(applications);
         }
 
         [HttpGet("GatewayReview/ClosedApplications")]
-        public async Task<ActionResult> ClosedApplications(string sortColumn, string sortOrder)
+        public async Task<ActionResult> ClosedApplications(string searchTerm, string sortColumn, string sortOrder)
         {
-            var applications = await _mediator.Send(new ClosedGatewayApplicationsRequest { SortColumn = sortColumn, SortOrder = sortOrder });
+            var applications = await _mediator.Send(new ClosedGatewayApplicationsRequest { SearchTerm = searchTerm, SortColumn = sortColumn, SortOrder = sortOrder });
             return Ok(applications);
         }
 

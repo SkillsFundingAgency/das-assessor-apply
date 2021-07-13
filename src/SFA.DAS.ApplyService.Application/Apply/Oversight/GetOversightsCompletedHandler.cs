@@ -18,7 +18,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Oversight
 
         public async Task<CompletedOversightReviews> Handle(GetOversightsCompletedRequest request, CancellationToken cancellationToken)
         {
-            return await _oversightReviewQueries.GetCompletedOversightReviews();
+            return await _oversightReviewQueries.GetCompletedOversightReviews(request.SortColumn,request.SortOrder);
         }
     }
 }

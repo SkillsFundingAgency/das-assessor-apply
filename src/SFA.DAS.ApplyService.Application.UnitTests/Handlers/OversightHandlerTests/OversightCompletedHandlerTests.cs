@@ -24,7 +24,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.OversightHandlerTe
         public void Setup()
         {
             OversightReviewQueries = new Mock<IOversightReviewQueries>();
-            OversightReviewQueries.Setup(r => r.GetCompletedOversightReviews()).ReturnsAsync(new CompletedOversightReviews());
+            OversightReviewQueries.Setup(r => r.GetCompletedOversightReviews(null,null)).ReturnsAsync(new CompletedOversightReviews());
             CompletedHandler = new GetOversightsCompletedHandler(OversightReviewQueries.Object);
           }
 
@@ -58,9 +58,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.OversightHandlerTe
                 }
             }};
 
-            OversightReviewQueries.Setup(r => r.GetCompletedOversightReviews()).ReturnsAsync(completedApplications);
+            OversightReviewQueries.Setup(r => r.GetCompletedOversightReviews(null,null)).ReturnsAsync(completedApplications);
 
-            var result = CompletedHandler.Handle(new GetOversightsCompletedRequest(), new CancellationToken()).GetAwaiter().GetResult();
+            var result = CompletedHandler.Handle(new GetOversightsCompletedRequest(null,null), new CancellationToken()).GetAwaiter().GetResult();
 
             Assert.AreEqual(2,result.Reviews.Count);
             Assert.AreEqual(1,result.Reviews.Count(x=> x.ApplicationId == completedApplications.Reviews.First().ApplicationId));

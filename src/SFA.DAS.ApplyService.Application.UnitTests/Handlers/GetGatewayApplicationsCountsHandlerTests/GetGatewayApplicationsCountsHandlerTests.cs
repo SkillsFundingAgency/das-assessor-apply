@@ -37,7 +37,7 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.GetGatewayApplicat
             };
 
             _repository = new Mock<IGatewayRepository>();
-            _repository.Setup(x => x.GetGatewayApplicationStatusCounts()).ReturnsAsync(data);
+            _repository.Setup(x => x.GetGatewayApplicationStatusCounts(It.IsAny<string>())).ReturnsAsync(data);
 
             _handler = new GetGatewayApplicationsCountsHandler(_repository.Object);
         }

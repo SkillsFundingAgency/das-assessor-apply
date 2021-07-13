@@ -28,9 +28,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.InProgressAssessor
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = new List<AssessorApplicationSummary>();
-            _repository.Setup(x => x.GetInProgressAssessorApplications(expectedUser)).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetInProgressAssessorApplications(expectedUser,null,null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new InProgressAssessorApplicationsRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new InProgressAssessorApplicationsRequest(expectedUser,null,null), new CancellationToken());
 
             Assert.AreSame(expectedResult, actualResult);
         }

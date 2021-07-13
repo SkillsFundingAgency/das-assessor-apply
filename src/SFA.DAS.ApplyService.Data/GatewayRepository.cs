@@ -105,7 +105,7 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-            public async Task<List<RoatpGatewaySummaryItem>> GetNewGatewayApplications(string sortOrder)
+            public async Task<List<RoatpGatewaySummaryItem>> GetNewGatewayApplications(string searchTerm, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -121,7 +121,7 @@ namespace SFA.DAS.ApplyService.Data
                             apply.AssessorReviewStatus AS AssessorReviewStatus,
                             apply.FinancialReviewStatus AS FinancialReviewStatus,
                             org.Name AS OrganisationName,
-                            JSON_VALUE(apply.ApplyData, '$.ApplyDetails.UKPRN') AS Ukprn,
+                            apply.UKPRN AS Ukprn,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ReferenceNumber') AS ApplicationReferenceNumber,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ProviderRouteName') AS ApplicationRoute,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS SubmittedDate
@@ -129,16 +129,22 @@ namespace SFA.DAS.ApplyService.Data
 	                      INNER JOIN Organisations org ON org.Id = apply.OrganisationId
 	                      WHERE apply.ApplicationStatus = @applicationStatusSubmitted AND apply.DeletedAt IS NULL
 	                        AND apply.GatewayReviewStatus = @gatewayReviewStatusNew
+                            AND ( 
+                                    @searchString = '%%'
+                                    OR apply.UKPRN LIKE @searchString
+                                    OR org.Name LIKE  @searchString
+                                )
                           ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             applicationStatusSubmitted = ApplicationStatus.Submitted,
                             gatewayReviewStatusNew = GatewayReviewStatus.New,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<List<RoatpGatewaySummaryItem>> GetInProgressGatewayApplications(string sortColumn, string sortOrder)
+        public async Task<List<RoatpGatewaySummaryItem>> GetInProgressGatewayApplications(string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -155,7 +161,7 @@ namespace SFA.DAS.ApplyService.Data
                             apply.FinancialReviewStatus AS FinancialReviewStatus,
                             apply.GatewayUserName AS LastCheckedBy,
                             org.Name AS OrganisationName,
-                            JSON_VALUE(apply.ApplyData, '$.ApplyDetails.UKPRN') AS Ukprn,
+                            apply.UKPRN AS Ukprn,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ReferenceNumber') AS ApplicationReferenceNumber,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ProviderRouteName') AS ApplicationRoute,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS SubmittedDate,
@@ -164,17 +170,23 @@ namespace SFA.DAS.ApplyService.Data
 	                      INNER JOIN Organisations org ON org.Id = apply.OrganisationId
 	                      WHERE apply.ApplicationStatus = @applicationStatusSubmitted AND apply.DeletedAt IS NULL
 	                        AND apply.GatewayReviewStatus in (@gatewayReviewStatusInProgress, @gatewayReviewStatusClarificationSent)
+                            AND ( 
+                                    @searchString = '%%'
+                                    OR apply.UKPRN LIKE @searchString
+                                    OR org.Name LIKE  @searchString
+                                )
                           ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             applicationStatusSubmitted = ApplicationStatus.Submitted,
                             gatewayReviewStatusInProgress = GatewayReviewStatus.InProgress,
-                            gatewayReviewStatusClarificationSent = GatewayReviewStatus.ClarificationSent
+                            gatewayReviewStatusClarificationSent = GatewayReviewStatus.ClarificationSent,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<List<RoatpGatewaySummaryItem>> GetClosedGatewayApplications(string sortColumn, string sortOrder)
+        public async Task<List<RoatpGatewaySummaryItem>> GetClosedGatewayApplications(string searchTerm, string sortColumn, string sortOrder)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
@@ -191,7 +203,7 @@ namespace SFA.DAS.ApplyService.Data
                             apply.FinancialReviewStatus AS FinancialReviewStatus,
                             apply.GatewayUserName AS LastCheckedBy,                            
                             org.Name AS OrganisationName,
-                            JSON_VALUE(apply.ApplyData, '$.ApplyDetails.UKPRN') AS Ukprn,
+                            apply.UKPRN AS Ukprn,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ReferenceNumber') AS ApplicationReferenceNumber,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ProviderRouteName') AS ApplicationRoute,
                             JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS SubmittedDate,
@@ -212,6 +224,11 @@ namespace SFA.DAS.ApplyService.Data
                                     apply.ApplicationStatus in (@applicationStatusWithdrawn, @applicationStatusRemoved)
                                     OR apply.GatewayReviewStatus IN (@gatewayReviewStatusApproved, @gatewayReviewStatusFailed, @gatewayReviewStatusRejected)
                                 )
+                            AND ( 
+                                    @searchString = '%%'
+                                    OR apply.UKPRN LIKE @searchString
+                                    OR org.Name LIKE  @searchString
+                                )
                           ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
@@ -219,24 +236,35 @@ namespace SFA.DAS.ApplyService.Data
                             applicationStatusRemoved = ApplicationStatus.Removed,
                             gatewayReviewStatusApproved = GatewayReviewStatus.Pass,
                             gatewayReviewStatusFailed = GatewayReviewStatus.Fail,
-                            gatewayReviewStatusRejected = GatewayReviewStatus.Rejected
+                            gatewayReviewStatusRejected = GatewayReviewStatus.Rejected,
+                            searchString = $"%{searchTerm}%"
                         })).ToList();
             }
         }
 
-        public async Task<IEnumerable<GatewayApplicationStatusCount>> GetGatewayApplicationStatusCounts()
+        public async Task<IEnumerable<GatewayApplicationStatusCount>> GetGatewayApplicationStatusCounts(string searchTerm)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
                 var applicationStatuses = await connection.QueryAsync<GatewayApplicationStatusCount>(
-                    @"SELECT
-                        GatewayReviewStatus,
-                        ApplicationStatus,
+                    $@"SELECT
+                        apply.GatewayReviewStatus,
+                        apply.ApplicationStatus,
                         COUNT(1) as 'Count'
-                        FROM Apply
-                        WHERE DeletedAt IS NULL
+                        FROM Apply apply
+	                    INNER JOIN Organisations org ON org.Id = apply.OrganisationId
+                        WHERE apply.DeletedAt IS NULL
+                            AND ( 
+                                    @searchString = '%%'
+                                    OR apply.UKPRN LIKE @searchString
+                                    OR org.Name LIKE  @searchString
+                                )
                         GROUP BY GatewayReviewStatus, ApplicationStatus
-                        ");
+                        ", 
+                    new 
+                    { 
+                        searchString = $"%{searchTerm}%" 
+                    });
 
                 return applicationStatuses;
             }

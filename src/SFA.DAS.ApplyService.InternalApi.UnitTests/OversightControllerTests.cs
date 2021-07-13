@@ -75,7 +75,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests
                 .Setup(x => x.Send(It.IsAny<GetOversightsPendingRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(pendingOversights);
 
-            var actualResult = await _controller.OversightsPending();
+            var actualResult = await _controller.OversightsPending(null,null);
             Assert.AreEqual(pendingOversights.Reviews.Count, actualResult.Value.Reviews.Count);
         }
 
@@ -100,7 +100,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests
                 .Setup(x => x.Send(It.IsAny<GetOversightsPendingRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(pendingOversights);
 
-            var actualResult = await _controller.OversightsPending();
+            var actualResult = await _controller.OversightsPending(null,null);
             var returnedOversight = actualResult.Value.Reviews.First();
 
             Assert.That(returnedOversight,Is.SameAs(pendingOversights.Reviews.First()));

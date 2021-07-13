@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.ApplyService.Application.Apply;
 using SFA.DAS.ApplyService.Application.Apply.Assessor;
 using SFA.DAS.ApplyService.Domain.Apply.Assessor;
 using SFA.DAS.ApplyService.Domain.Interfaces;
@@ -28,9 +27,9 @@ namespace SFA.DAS.ApplyService.Application.UnitTests.Handlers.NewAssessorApplica
         {
             var expectedUser = "sadjkffgdji";
             var expectedResult = new List<AssessorApplicationSummary>();
-            _repository.Setup(x => x.GetNewAssessorApplications(expectedUser)).ReturnsAsync(expectedResult);
+            _repository.Setup(x => x.GetNewAssessorApplications(expectedUser,null,null)).ReturnsAsync(expectedResult);
 
-            var actualResult = await _handler.Handle(new NewAssessorApplicationsRequest(expectedUser), new CancellationToken());
+            var actualResult = await _handler.Handle(new NewAssessorApplicationsRequest(expectedUser,null,null), new CancellationToken());
 
             Assert.AreSame(expectedResult, actualResult);
         }

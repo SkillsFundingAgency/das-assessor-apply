@@ -18,7 +18,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Assessor
 
         public async Task<List<AssessorApplicationSummary>> Handle(NewAssessorApplicationsRequest request, CancellationToken cancellationToken)
         {
-            return await _repository.GetNewAssessorApplications(request.UserId);
+            return await _repository.GetNewAssessorApplications(request.UserId, request.SortOrder,request.SortColumn);
         }
     }
 }

@@ -23,10 +23,10 @@ namespace SFA.DAS.ApplyService.Domain.Interfaces
 
         Task<Guid> SnapshotApplication(Guid applicationId, Guid snapshotApplicationId, List<ApplySequence> newSequences);
 
-        Task<List<RoatpFinancialSummaryItem>> GetOpenFinancialApplications();
+        Task<List<RoatpFinancialSummaryItem>> GetOpenFinancialApplications(string sortOrder, string sortColumn);
         Task<List<RoatpFinancialSummaryDownloadItem>> GetOpenFinancialApplicationsForDownload();
-        Task<List<RoatpFinancialSummaryItem>> GetClarificationFinancialApplications();
-        Task<List<RoatpFinancialSummaryItem>> GetClosedFinancialApplications();
+        Task<List<RoatpFinancialSummaryItem>> GetClarificationFinancialApplications(string sortOrder, string sortColumn);
+        Task<List<RoatpFinancialSummaryItem>> GetClosedFinancialApplications(string sortOrder, string sortColumn);
         Task<RoatpFinancialApplicationsStatusCounts> GetFinancialApplicationsStatusCounts();
         Task<bool> StartFinancialReview(Guid applicationId, string reviewer);
         Task<bool> RecordFinancialGrade(Guid applicationId, FinancialReviewDetails financialReviewDetails, string financialReviewStatus);

@@ -41,7 +41,7 @@ namespace SFA.DAS.ApplyService.InternalApi.UnitTests.Controllers
         [Test]
         public async Task Get_ApplicationCounts_returns_expected_counts_for_the_user()
         {
-            var result = await _controller.GetApplicationCounts();
+            var result = await _controller.GetApplicationCounts(null);
 
             Assert.AreEqual(1, result.NewApplicationsCount);
             Assert.AreEqual(2, result.InProgressApplicationsCount);

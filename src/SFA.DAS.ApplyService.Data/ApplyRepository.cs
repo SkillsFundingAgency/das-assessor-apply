@@ -243,13 +243,15 @@ namespace SFA.DAS.ApplyService.Data
         
 
 
-        public async Task<List<RoatpFinancialSummaryItem>> GetOpenFinancialApplications()
+        public async Task<List<RoatpFinancialSummaryItem>> GetOpenFinancialApplications(string sortOrder, string sortColumn)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirectionFinancial(sortOrder)}";
+
                 return (await connection
                     .QueryAsync<RoatpFinancialSummaryItem>(
-                        @"SELECT 
+                        $@"SELECT 
                             apply.Id AS Id,
                             apply.ApplicationId AS ApplicationId,
                             apply.ApplicationStatus AS ApplicationStatus,
@@ -281,7 +283,7 @@ namespace SFA.DAS.ApplyService.Data
                           AND apply.GatewayReviewStatus IN (@gatewayStatusPass) -- NOTE: If Gateway did not pass then it goes straight to Oversight
                           AND apply.ApplicationStatus = @applicationStatusGatewayAssessed AND apply.DeletedAt IS NULL
                           AND apply.FinancialReviewStatus IN (@financialStatusDraft, @financialStatusNew, @financialStatusInProgress)
-                        ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC, org.Name ASC",
+                        ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             financialHealthSequence = 2,
@@ -371,13 +373,14 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<RoatpFinancialSummaryItem>> GetClarificationFinancialApplications()
+        public async Task<List<RoatpFinancialSummaryItem>> GetClarificationFinancialApplications(string sortOrder, string sortColumn)
         {
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirectionFinancial(sortOrder)}";
                 return (await connection
                     .QueryAsync<RoatpFinancialSummaryItem>(
-                        @"SELECT 
+                        $@"SELECT 
                             apply.Id AS Id,
                             apply.ApplicationId AS ApplicationId,
                             apply.ApplicationStatus AS ApplicationStatus,
@@ -411,7 +414,7 @@ namespace SFA.DAS.ApplyService.Data
                           AND apply.GatewayReviewStatus IN (@gatewayStatusPass) -- NOTE: If Gateway did not pass then it goes straight to Oversight
                           AND apply.ApplicationStatus = @applicationStatusGatewayAssessed AND apply.DeletedAt IS NULL
                           AND apply.FinancialReviewStatus IN (@financialStatusClarificationSent)
-                        ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC,  org.Name ASC",
+                       ORDER BY {orderByClause}, org.Name ASC",
                         new
                         {
                             financialHealthSequence = 2,
@@ -422,13 +425,17 @@ namespace SFA.DAS.ApplyService.Data
             }
         }
 
-        public async Task<List<RoatpFinancialSummaryItem>> GetClosedFinancialApplications()
+        public async Task<List<RoatpFinancialSummaryItem>> GetClosedFinancialApplications(string sortOrder, string sortColumn)
         {
+            if (sortColumn == null)
+                sortColumn = "OutcomeMadeDate";
+
             using (var connection = new SqlConnection(_config.SqlConnectionString))
             {
+                var orderByClause = $"{GetSortColumnForNew(sortColumn)} { GetOrderByDirectionFinancial(sortOrder)}";
                 return (await connection
                    .QueryAsync<RoatpFinancialSummaryItem>(
-                       @"SELECT 
+                       $@"SELECT 
                             apply.Id AS Id,
                             apply.ApplicationId AS ApplicationId,
                             apply.ApplicationStatus AS ApplicationStatus,
@@ -474,7 +481,7 @@ namespace SFA.DAS.ApplyService.Data
                                apply.ApplicationStatus IN (@applicationStatusWithdrawn, @applicationStatusRemoved)
                                OR apply.FinancialReviewStatus IN (@financialStatusApproved, @financialStatusDeclined, @financialStatusExempt)
                               )
-                        ORDER BY CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ASC,  org.Name ASC",
+                        ORDER BY {orderByClause}, org.Name ASC",
                        new
                        {
                            financialHealthSequence = 2,
@@ -491,9 +498,9 @@ namespace SFA.DAS.ApplyService.Data
         public async Task<RoatpFinancialApplicationsStatusCounts> GetFinancialApplicationsStatusCounts()
         {
             // Note: For now it is easier to run all three queries. It may make sense to do something similar to that done with EPAO
-            var openApplications = await GetOpenFinancialApplications();
-            var clarificationApplications = await GetClarificationFinancialApplications();
-            var closedApplications = await GetClosedFinancialApplications();
+            var openApplications = await GetOpenFinancialApplications(null,null);
+            var clarificationApplications = await GetClarificationFinancialApplications(null,null);
+            var closedApplications = await GetClosedFinancialApplications(null,null);
 
             return new RoatpFinancialApplicationsStatusCounts
             {
@@ -736,6 +743,37 @@ namespace SFA.DAS.ApplyService.Data
             }
 
             return await Task.FromResult(true);
+        }
+
+
+        private static string GetSortColumnForNew(string requestedColumn)
+        {
+            switch (requestedColumn)
+            {
+                case "SubmittedDate":
+                    return " CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ";
+                case "OutcomeMadeBy":
+                    return " JSON_VALUE(apply.FinancialGrade, '$.ClarificationRequestedBy') ";
+                case "OutcomeMadeByClosed":
+                    return  $@" CASE 
+                                WHEN apply.ApplicationStatus = '{ApplicationStatus.Withdrawn}'THEN JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationWithdrawnBy')
+                                WHEN apply.ApplicationStatus = '{ApplicationStatus.Removed}' THEN JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationRemovedBy')
+                                ELSE JSON_VALUE(apply.FinancialGrade, '$.GradedBy')
+                            END ";
+                case "OutcomeMadeDate":
+                    return $@" CASE 
+                                WHEN apply.ApplicationStatus = '{ApplicationStatus.Withdrawn}' THEN JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationWithdrawnOn')
+                                WHEN apply.ApplicationStatus = '{ApplicationStatus.Removed}' THEN JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationRemovedOn')
+                                ELSE JSON_VALUE(apply.FinancialGrade, '$.GradedDateTime')
+                            END";
+                default:
+                    return " CAST(JSON_VALUE(apply.ApplyData, '$.ApplyDetails.ApplicationSubmittedOn') AS DATE) ";
+            }
+        }
+
+        private static string GetOrderByDirectionFinancial(string sortOrder)
+        {
+            return "ascending".Equals(sortOrder, StringComparison.InvariantCultureIgnoreCase) ? " ASC " : " DESC ";
         }
     }
 }

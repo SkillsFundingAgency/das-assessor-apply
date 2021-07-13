@@ -18,7 +18,7 @@ namespace SFA.DAS.ApplyService.Application.Apply.Gateway.Applications
 
         public async Task<List<RoatpGatewaySummaryItem>> Handle(InProgressGatewayApplicationsRequest request, CancellationToken cancellationToken)
         {
-            return await _repository.GetInProgressGatewayApplications(request.SortColumn, request.SortOrder);
+            return await _repository.GetInProgressGatewayApplications(request.SearchTerm, request.SortColumn, request.SortOrder);
         }
     }
 }
